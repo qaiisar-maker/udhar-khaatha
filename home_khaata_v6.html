@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home Khaata v6 — گھر کا حساب</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b5e20">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Home Khaata">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --g1:#e8f5e9; --g2:#c8e6c9; --g3:#a5d6a7; --g5:#43a047;
+  --g6:#2e7d32; --gd:#1b5e20; --w:#fff;
+  --td:#1a2e1a; --tm:#3d5a3d; --tl:#6b8f6b;
+  --acc:#e65100; --red:#c62828;
+  --sh:0 4px 20px rgba(46,125,50,0.13); --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',sans-serif;background:linear-gradient(160deg,#e8f5e9 0%,#f4faf4 60%,#e0f2f1 100%);min-height:100vh;color:var(--td)}
+
+/* ── LOCK SCREEN ── */
+#lock-screen{position:fixed;inset:0;background:linear-gradient(160deg,#1b5e20,#2e7d32,#43a047);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px}
+#lock-screen.hidden{display:none}
+.lock-logo{font-size:3.2rem;margin-bottom:12px}
+.lock-title{color:#fff;font-size:1.5rem;font-weight:700;margin-bottom:4px}
+.lock-sub{color:rgba(255,255,255,.75);font-size:.78rem;margin-bottom:32px}
+.lock-box{background:rgba(255,255,255,.12);border-radius:20px;padding:24px 20px 28px;width:100%;max-width:360px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2)}
+.lock-label{color:rgba(255,255,255,.85);font-size:.72rem;font-weight:600;margin-bottom:6px;display:block}
+.lock-input{width:100%;padding:12px 14px;border-radius:12px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-family:'Poppins',sans-serif;font-size:1.1rem;letter-spacing:4px;text-align:center;outline:none}
+.lock-input::placeholder{letter-spacing:1px;font-size:.82rem;color:rgba(255,255,255,.5)}
+.lock-input:focus{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.2)}
+.lock-btn{width:100%;margin-top:14px;padding:14px;background:#fff;color:var(--g6);border:none;border-radius:12px;font-family:'Poppins',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer}
+.lock-btn:active{transform:scale(.98);background:#f1f8e9}
+.lock-err{color:#ffcdd2;font-size:.75rem;text-align:center;margin-top:8px;min-height:18px}
+.lock-hint{color:rgba(255,255,255,.5);font-size:.65rem;text-align:center;margin-top:12px}
+.setup-link{color:rgba(255,255,255,.65);font-size:.7rem;text-align:center;margin-top:10px;cursor:pointer;text-decoration:underline}
+
+/* ── APP ── */
+.hdr{background:linear-gradient(135deg,var(--gd),var(--g5));color:#fff;text-align:center;padding:18px 16px 14px;box-shadow:0 3px 16px rgba(27,94,32,.3)}
+.hdr h1{font-size:1.4rem;font-weight:700}
+.hdr p{font-size:.75rem;opacity:.85;margin-top:3px}
+.hdr .ico{font-size:1.6rem;display:block;margin-bottom:3px}
+
+.tabs{display:flex;background:var(--g2);border-bottom:2px solid var(--g3)}
+.tb{flex:1;padding:11px 6px;background:none;border:none;font-family:'Poppins',sans-serif;font-size:.72rem;font-weight:600;color:var(--tm);cursor:pointer;transition:.2s;border-bottom:3px solid transparent}
+.tb.active{color:var(--g6);border-bottom-color:var(--g6);background:var(--w)}
+.tb span{display:block;font-size:.95rem}
+
+.panel{display:none;padding:14px 12px 80px}
+.panel.active{display:block}
+
+.card{background:var(--w);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--sh);border:1px solid var(--g2)}
+.ctitle{font-size:.82rem;font-weight:700;color:var(--g6);margin-bottom:12px;display:flex;align-items:center;gap:5px}
+
+label{display:block;font-size:.71rem;font-weight:600;color:var(--tm);margin-bottom:3px;margin-top:11px}
+label:first-of-type{margin-top:0}
+input,select{width:100%;padding:10px 12px;border:1.5px solid var(--g3);border-radius:10px;font-family:'Poppins',sans-serif;font-size:.82rem;color:var(--td);background:var(--g1);transition:.2s;outline:none;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{border-color:var(--g5);box-shadow:0 0 0 3px rgba(67,160,71,.15);background:var(--w)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232e7d32' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:11px;font-family:'Poppins',sans-serif;font-size:.86rem;font-weight:700;cursor:pointer;margin-top:12px;transition:.2s;letter-spacing:.2px}
+.btn-primary{background:linear-gradient(135deg,var(--g5),var(--g6));color:#fff;box-shadow:0 4px 14px rgba(46,125,50,.3)}
+.btn-secondary{background:var(--g2);color:var(--g6)}
+.btn-paid{background:linear-gradient(135deg,#e53935,#b71c1c);color:#fff;box-shadow:0 4px 14px rgba(198,40,40,.3)}
+.btn-orange{background:linear-gradient(135deg,#f57c00,#e65100);color:#fff;box-shadow:0 4px 14px rgba(230,81,0,.3)}
+.btn-blue{background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;box-shadow:0 4px 14px rgba(21,101,192,.3)}
+.btn:active{transform:scale(.98)}
+
+.erow{display:flex;align-items:flex-start;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--g2);gap:6px}
+.erow:last-child{border-bottom:none}
+.esno{font-size:.67rem;color:var(--tl);font-weight:600;min-width:18px;padding-top:2px}
+.edate{font-size:.67rem;color:var(--tl);font-weight:600}
+.edesc{font-size:.77rem;color:var(--td);line-height:1.4}
+.eamt{font-size:.84rem;font-weight:700;color:var(--g6);white-space:nowrap;padding-top:2px}
+
+/* Payment row in range report */
+.prow{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border-radius:10px;margin:6px 0;border:1.5px solid var(--g3)}
+.prow-label{font-size:.72rem;font-weight:700;color:var(--g6)}
+.prow-amt{font-size:.82rem;font-weight:800;color:var(--g6)}
+.prow-meta{font-size:.63rem;color:var(--tl);margin-top:1px}
+.section-divider{display:flex;align-items:center;gap:8px;margin:10px 0 6px}
+.section-divider span{font-size:.67rem;font-weight:700;color:var(--tl);white-space:nowrap}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--g2)}
+.carry-box{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:2px solid #ffb74d;border-radius:12px;margin:8px 0}
+.carry-lbl{font-size:.76rem;font-weight:700;color:#e65100}
+.carry-amt{font-size:1rem;font-weight:800;color:#bf360c}
+.green-box{background:linear-gradient(135deg,#e8f5e9,#c8e6c9)!important;border-color:var(--g3)!important}
+.green-box .carry-lbl{color:var(--g6)!important}
+.green-box .carry-amt{color:var(--gd)!important}
+
+.ditem{display:flex;align-items:center;justify-content:space-between;padding:12px 13px;background:var(--g1);border-radius:12px;margin-bottom:8px;border:1px solid var(--g2);cursor:pointer;transition:.2s;-webkit-tap-highlight-color:transparent}
+.ditem:active{background:var(--g2);transform:scale(.99)}
+.dname{font-weight:700;font-size:.86rem;color:var(--td)}
+.dtotal{font-weight:700;color:var(--acc);font-size:.88rem}
+.dstatus{font-size:.63rem;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:3px;display:inline-block}
+.sp{background:#fff3e0;color:#e65100}
+.sc{background:#e8f5e9;color:var(--g6)}
+
+.tbox{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;background:linear-gradient(135deg,var(--g1),#f1f8e9);border-radius:12px;border:2px solid var(--g3);margin-top:10px}
+.tlbl{font-weight:700;font-size:.83rem;color:var(--tm)}
+.tamt{font-weight:800;font-size:1.15rem;color:var(--g6)}
+
+.col-hdr{display:flex;justify-content:space-between;font-size:.68rem;font-weight:700;color:var(--tl);padding:5px 0;border-bottom:2px solid var(--g3);margin-bottom:7px}
+
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--g6);color:#fff;padding:9px 20px;border-radius:22px;font-size:.78rem;font-weight:600;transition:transform .3s;z-index:9999;box-shadow:0 4px 18px rgba(0,0,0,.22);pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:flex-end;justify-content:center}
+.mbg.open{display:flex}
+.mbox{background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px 16px 30px;max-height:88vh;overflow-y:auto}
+.mtitle{font-size:.95rem;font-weight:700;color:var(--g6);margin-bottom:14px;display:flex;align-items:center;gap:5px}
+
+.empty{text-align:center;padding:28px 14px;color:var(--tl);font-size:.8rem}
+.empty span{font-size:2.2rem;display:block;margin-bottom:7px}
+
+#receiptCanvas{width:100%;border-radius:10px;display:block;border:1px solid var(--g2)}
+
+/* Partial Payment */
+.entry-check-row{display:flex;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--g2);gap:10px}
+.entry-check-row:last-child{border-bottom:none}
+.entry-check-row input[type=checkbox]{width:20px;height:20px;min-width:20px;margin-top:2px;accent-color:var(--g6);cursor:pointer}
+.partial-summary{background:linear-gradient(135deg,#fff8e1,#fff3cd);border:2px solid #ffcc02;border-radius:12px;padding:13px 14px;margin-top:10px}
+.partial-summary .ps-row{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:4px}
+.partial-summary .ps-row.total{font-weight:800;font-size:.9rem;color:#e65100;border-top:1px solid #ffcc02;padding-top:6px;margin-top:4px}
+.partial-summary .ps-row.rem{font-weight:700;color:var(--g6)}
+.select-btns{display:flex;gap:8px;margin-bottom:10px}
+.select-btns button{flex:1;padding:7px;font-size:.72rem;font-weight:700;border:1.5px solid var(--g3);border-radius:8px;background:var(--g1);color:var(--g6);cursor:pointer;font-family:'Poppins',sans-serif}
+.btn-partial{background:linear-gradient(135deg,#f57c00,#e65100);color:#fff;box-shadow:0 4px 14px rgba(230,81,0,.3)}
+
+/* Edit/Delete */
+.entry-actions{display:flex;gap:5px;margin-top:4px}
+.ea-btn{padding:3px 9px;border:none;border-radius:7px;font-size:.63rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;transition:.15s}
+.ea-edit{background:#e3f2fd;color:#1565c0}
+.ea-del{background:#fce4ec;color:#b71c1c}
+
+/* Date range */
+.drange-row{display:flex;gap:8px;align-items:flex-end}
+.drange-row>div{flex:1}
+.drange-row label{margin-top:0}
+.range-total-box{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border:2px solid var(--g3);border-radius:12px;padding:11px 14px;margin-top:10px}
+.range-total-box .rtamt{font-weight:800;font-size:1.1rem;color:var(--g6)}
+.range-total-box .rtlbl{font-size:.78rem;font-weight:700;color:var(--tm)}
+
+/* Edit overlay */
+.edit-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center;padding:16px}
+.edit-overlay.open{display:flex}
+.edit-box{background:#fff;border-radius:18px;padding:20px 16px 24px;width:100%;max-width:480px;box-shadow:0 8px 40px rgba(0,0,0,.25)}
+.edit-box .etitle{font-size:.92rem;font-weight:700;color:var(--g6);margin-bottom:14px}
+
+/* Settings */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px dashed var(--g2)}
+.setting-row:last-child{border-bottom:none}
+.setting-info{flex:1}
+.setting-title{font-size:.82rem;font-weight:700;color:var(--td)}
+.setting-desc{font-size:.67rem;color:var(--tl);margin-top:2px}
+.setting-btn{padding:7px 14px;border:none;border-radius:9px;font-family:'Poppins',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.sb-green{background:var(--g2);color:var(--g6)}
+.sb-orange{background:#fff3e0;color:#e65100}
+.sb-red{background:#fce4ec;color:#b71c1c}
+.sb-blue{background:#e3f2fd;color:#1565c0}
+
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-box{background:var(--g1);border-radius:12px;padding:12px;border:1px solid var(--g2);text-align:center}
+.stat-val{font-size:1.1rem;font-weight:800;color:var(--g6)}
+.stat-lbl{font-size:.63rem;color:var(--tl);margin-top:3px}
+</style>
+</head>
+<body>
+
+<!-- ══ LOCK SCREEN ══ -->
+<div id="lock-screen">
+  <div class="lock-logo">🌿</div>
+  <div class="lock-title">Home Khaata</div>
+  <div class="lock-sub">گھر کا روزانہ حساب کتاب</div>
+  <div class="lock-box">
+    <span class="lock-label">🔐 Password Darj Karein</span>
+    <input type="password" class="lock-input" id="lock-inp" placeholder="Password..." maxlength="20" onkeydown="if(event.key==='Enter')unlock()">
+    <button class="lock-btn" onclick="unlock()">🔓 Khulaao</button>
+    <div class="lock-err" id="lock-err"></div>
+    <div class="lock-hint" id="lock-hint"></div>
+  </div>
+  <div class="setup-link" id="setup-link" onclick="showSetupMode()">Pehli dafa? Password Set Karein →</div>
+</div>
+
+<!-- ══ HEADER ══ -->
+<div class="hdr">
+  <span class="ico">🌿</span>
+  <h1>Home Khaata</h1>
+  <p>گھر کا روزانہ حساب کتاب</p>
+</div>
+
+<!-- ══ TABS ══ -->
+<div class="tabs">
+  <button class="tb active" onclick="showTab('add',this)"><span>➕</span>Entry</button>
+  <button class="tb" onclick="showTab('list',this)"><span>📋</span>Khaata</button>
+  <button class="tb" onclick="showTab('report',this)"><span>📊</span>Report</button>
+  <button class="tb" onclick="showTab('settings',this)"><span>⚙️</span>Settings</button>
+</div>
+
+<!-- ══ TAB: ADD ══ -->
+<div class="panel active" id="tab-add">
+  <div class="card">
+    <div class="ctitle">🛒 Nayi Entry Darj Karein</div>
+    <label>Dukandar ka Naam *</label>
+    <input type="text" id="inp-dk" list="dk-sugg" placeholder="jaise: Kashif Gujar Milk Shop" autocomplete="off">
+    <datalist id="dk-sugg"></datalist>
+    <label>Tarikh *</label>
+    <input type="date" id="inp-dt">
+    <label>Cheez (Description) *</label>
+    <input type="text" id="inp-ds" placeholder="jaise: Milk 2L, Dahi 1Kg">
+    <label>Raqam (Rs.) *</label>
+    <input type="number" id="inp-pr" placeholder="0" min="0" step="0.01">
+    <button class="btn btn-primary" onclick="addEntry()">✅ Entry Save Karein</button>
+  </div>
+</div>
+
+<!-- ══ TAB: KHAATA ══ -->
+<div class="panel" id="tab-list">
+  <div class="card">
+    <div class="ctitle">🏪 Tamam Dukandar</div>
+    <div id="dk-list"><div class="empty"><span>🛒</span>Koi entry nahi abhi tak</div></div>
+  </div>
+</div>
+
+<!-- ══ TAB: REPORT ══ -->
+<div class="panel" id="tab-report">
+  <div class="card">
+    <div class="ctitle">📊 Dukandar Report</div>
+    <label>Dukandar Select Karein *</label>
+    <select id="rep-dk"><option value="">-- Dukandar chunein --</option></select>
+    <button class="btn btn-secondary" onclick="loadReport()">🔍 Report Dekho</button>
+  </div>
+
+  <div class="card" id="rep-card" style="display:none"></div>
+
+  <div class="card" id="pay-sec" style="display:none">
+    <div class="ctitle">💳 Payment Karein</div>
+    <div id="partial-sec" style="display:none">
+      <div class="ctitle" style="font-size:.75rem;color:var(--acc);margin-bottom:8px">☑️ Jin entries ka payment karna hai unhe select karein</div>
+      <div class="select-btns">
+        <button onclick="selectAll()">✅ Sab Select</button>
+        <button onclick="deselectAll()">❌ Sab Hatao</button>
+      </div>
+      <div id="entry-checklist"></div>
+      <div class="partial-summary" id="partial-summary" style="display:none">
+        <div class="ps-row"><span>✅ Selected entries:</span><span id="ps-count">0</span></div>
+        <div class="ps-row total"><span>💰 Pay karein:</span><span id="ps-paying">Rs. 0</span></div>
+        <div class="ps-row rem"><span>🕐 Baki rahega:</span><span id="ps-rem">Rs. 0</span></div>
+      </div>
+    </div>
+    <label>Payment Method</label>
+    <select id="pay-method">
+      <option value="Cash">💵 Cash</option>
+      <option value="JazzCash">📱 JazzCash</option>
+      <option value="EasyPaisa">📱 EasyPaisa</option>
+      <option value="Online">🏦 Online Transfer</option>
+    </select>
+    <button class="btn btn-secondary" onclick="togglePartial()" id="partial-toggle-btn">☑️ Partial Payment (entries choose karein)</button>
+    <button class="btn btn-paid" onclick="markPaid(false)" id="full-pay-btn">✅ FULL PAID — Receipt Banayein</button>
+    <button class="btn btn-partial" onclick="markPaid(true)" id="partial-pay-btn" style="display:none">🧾 Selected Entries Pay Karein</button>
+  </div>
+
+  <div class="card" id="rec-wrap" style="display:none">
+    <div class="ctitle">🧾 Receipt — Auto Download Ho Gayi!</div>
+    <canvas id="receiptCanvas"></canvas>
+    <button class="btn btn-primary" onclick="manualDownload()" style="margin-top:10px">⬇️ Dobara Download Karein</button>
+  </div>
+
+  <!-- DATE RANGE REPORT -->
+  <div class="card">
+    <div class="ctitle">📅 Date Range Report + Image</div>
+    <div class="drange-row">
+      <div>
+        <label>Shuru (From)</label>
+        <input type="date" id="dr-from">
+      </div>
+      <div>
+        <label>Khatam (To)</label>
+        <input type="date" id="dr-to">
+      </div>
+    </div>
+    <label>Dukandar (optional — sab ke liye khali chhorein)</label>
+    <select id="dr-dk"><option value="">-- Tamam Dukandar --</option></select>
+    <button class="btn btn-primary" onclick="buildRangeReport()" style="margin-top:10px">📊 Range Report + Image Banayein</button>
+  </div>
+
+  <div class="card" id="range-rep-card" style="display:none">
+    <div class="ctitle">📅 Range Report — <span id="range-rep-title"></span></div>
+    <div id="range-rep-body"></div>
+    <canvas id="rangeCanvas" style="width:100%;border-radius:10px;display:none;border:1px solid var(--g2);margin-top:10px"></canvas>
+    <button class="btn btn-primary" onclick="downloadRangeImage()" style="margin-top:10px">⬇️ Image Download Karein</button>
+  </div>
+</div>
+
+<!-- ══ TAB: SETTINGS ══ -->
+<div class="panel" id="tab-settings">
+
+  <!-- Stats -->
+  <div class="card">
+    <div class="ctitle">📈 Aaj ka Jaiza</div>
+    <div class="stat-grid" id="stat-grid"></div>
+  </div>
+
+  <!-- Password -->
+  <div class="card">
+    <div class="ctitle">🔐 Password Settings</div>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Password Change Karein</div>
+        <div class="setting-desc">Naya password set karein</div>
+      </div>
+      <button class="setting-btn sb-orange" onclick="openChangePwd()">✏️ Change</button>
+    </div>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Lock Karein</div>
+        <div class="setting-desc">App ko abhi lock karo</div>
+      </div>
+      <button class="setting-btn sb-red" onclick="lockApp()">🔒 Lock</button>
+    </div>
+    <div id="change-pwd-form" style="display:none;margin-top:12px">
+      <label>Purana Password</label>
+      <input type="password" id="old-pwd" placeholder="Purana password">
+      <label>Naya Password</label>
+      <input type="password" id="new-pwd" placeholder="Naya password (kam az kam 4 digits)">
+      <label>Confirm Password</label>
+      <input type="password" id="confirm-pwd" placeholder="Dobara darj karein">
+      <button class="btn btn-primary" onclick="changePassword()" style="margin-top:10px">💾 Password Save Karein</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('change-pwd-form').style.display='none'">✖ Cancel</button>
+    </div>
+  </div>
+
+  <!-- Export/Import -->
+  <div class="card">
+    <div class="ctitle">💾 Data Export / Import</div>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">📤 Data Export (Backup)</div>
+        <div class="setting-desc">Poora data JSON file mein save karein</div>
+      </div>
+      <button class="setting-btn sb-green" onclick="exportData()">Export</button>
+    </div>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">📥 Data Import (Restore)</div>
+        <div class="setting-desc">Pehle ka backup wapas layen</div>
+      </div>
+      <button class="setting-btn sb-blue" onclick="document.getElementById('import-file').click()">Import</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">🗑️ Sab Data Delete</div>
+        <div class="setting-desc" style="color:#b71c1c">Ye action undo nahi hoga!</div>
+      </div>
+      <button class="setting-btn sb-red" onclick="clearAllData()">Delete</button>
+    </div>
+  </div>
+
+  <!-- PWA Install -->
+  <div class="card" id="pwa-card">
+    <div class="ctitle">📲 App Install Karein</div>
+    <div style="font-size:.78rem;color:var(--tm);line-height:1.6;margin-bottom:10px">
+      Home Khaata ko apne phone mein install karein — bilkul native app ki tarah kaam karega, internet ki zaroorat nahi!
+    </div>
+    <button class="btn btn-primary" id="pwa-install-btn" onclick="installPWA()" style="display:none">📲 Install App</button>
+    <div id="pwa-manual" style="font-size:.72rem;color:var(--tl);margin-top:8px;line-height:1.7">
+      <b style="color:var(--g6)">Android Chrome:</b> Menu (⋮) → "Add to Home Screen"<br>
+      <b style="color:var(--g6)">iPhone Safari:</b> Share (□↑) → "Add to Home Screen"
+    </div>
+  </div>
+
+  <!-- About -->
+  <div class="card">
+    <div class="ctitle">ℹ️ App Info</div>
+    <div style="font-size:.75rem;color:var(--tl);line-height:1.8">
+      <b style="color:var(--td)">Home Khaata v6</b><br>
+      گھر کا روزانہ حساب کتاب<br>
+      <b style="color:var(--td)">Powered by:</b> FGI — Faisal Goraya Industry<br>
+      <b style="color:var(--td)">Ali Pur Chattha</b>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+<div class="edit-overlay" id="edit-overlay">
+  <div class="edit-box">
+    <div class="etitle">✏️ Entry Edit Karein</div>
+    <input type="hidden" id="edit-id">
+    <label>Dukandar ka Naam *</label>
+    <input type="text" id="edit-dk" autocomplete="off">
+    <label>Tarikh *</label>
+    <input type="date" id="edit-dt">
+    <label>Cheez (Description) *</label>
+    <input type="text" id="edit-ds">
+    <label>Raqam (Rs.) *</label>
+    <input type="number" id="edit-pr" min="0" step="0.01">
+    <button class="btn btn-primary" onclick="saveEdit()" style="margin-top:14px">💾 Save Karein</button>
+    <button class="btn btn-secondary" onclick="closeEdit()" style="margin-top:8px">✖ Cancel</button>
+  </div>
+</div>
+
+<div class="mbg" id="modal">
+  <div class="mbox">
+    <div class="mtitle">🏪 <span id="m-name"></span></div>
+    <div id="m-entries"></div>
+    <div id="m-total"></div>
+    <div id="m-status" style="text-align:center;margin-top:10px;font-size:.75rem;color:var(--g5)"></div>
+    <button class="btn btn-secondary" onclick="closeModal()" style="margin-top:13px">✖ Band Karein</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══ PASSWORD SYSTEM ══
+const PWD_KEY = 'hk_pwd_v1';
+
+function getStoredPwd(){ return localStorage.getItem(PWD_KEY) || null; }
+function hashPwd(p){ // simple but adequate for local app
+  let h=0;for(let i=0;i<p.length;i++){h=((h<<5)-h)+p.charCodeAt(i);h|=0}
+  return h.toString(36);
+}
+
+function initLockScreen(){
+  const pwd = getStoredPwd();
+  if(!pwd){
+    // No password set yet — show setup mode
+    document.getElementById('lock-inp').style.display='none';
+    document.getElementById('lock-hint').textContent='Password abhi set nahi hai. Neeche click karein.';
+    document.getElementById('setup-link').style.display='block';
+  } else {
+    document.getElementById('lock-inp').style.display='block';
+    document.getElementById('lock-hint').textContent='Apna password darj karein';
+    document.getElementById('setup-link').style.display='none';
+  }
+}
+
+function unlock(){
+  const pwd = getStoredPwd();
+  const val = document.getElementById('lock-inp').value;
+  if(!pwd){
+    // No password — let in directly
+    hideLock();
+    return;
+  }
+  if(!val){ document.getElementById('lock-err').textContent='⚠️ Password darj karein!'; return; }
+  if(hashPwd(val) === pwd){
+    document.getElementById('lock-err').textContent='';
+    hideLock();
+  } else {
+    document.getElementById('lock-err').textContent='❌ Password galat hai!';
+    document.getElementById('lock-inp').value='';
+    document.getElementById('lock-inp').focus();
+  }
+}
+
+function hideLock(){
+  document.getElementById('lock-screen').classList.add('hidden');
+  document.getElementById('lock-inp').value='';
+}
+
+function lockApp(){
+  document.getElementById('lock-screen').classList.remove('hidden');
+  initLockScreen();
+  document.getElementById('lock-inp').focus();
+  toast('🔒 App lock ho gayi');
+}
+
+function showSetupMode(){
+  document.getElementById('lock-inp').style.display='block';
+  document.getElementById('lock-inp').placeholder='Naya password set karein...';
+  document.getElementById('lock-hint').textContent='Pehli dafa password set karein — yaad rakhein!';
+  document.getElementById('setup-link').textContent='✅ Yeh password save karein →';
+  document.getElementById('setup-link').onclick = function(){
+    const val = document.getElementById('lock-inp').value.trim();
+    if(!val || val.length < 4){ document.getElementById('lock-err').textContent='⚠️ Kam az kam 4 characters!'; return; }
+    localStorage.setItem(PWD_KEY, hashPwd(val));
+    toast('✅ Password set ho gaya!');
+    hideLock();
+  };
+}
+
+function openChangePwd(){
+  const f = document.getElementById('change-pwd-form');
+  f.style.display = f.style.display==='none'?'block':'none';
+}
+
+function changePassword(){
+  const old = document.getElementById('old-pwd').value;
+  const nw = document.getElementById('new-pwd').value;
+  const cf = document.getElementById('confirm-pwd').value;
+  const stored = getStoredPwd();
+  if(stored && hashPwd(old) !== stored){ toast('❌ Purana password galat hai!'); return; }
+  if(!nw || nw.length < 4){ toast('⚠️ Naya password kam az kam 4 characters!'); return; }
+  if(nw !== cf){ toast('❌ Dono password same nahi!'); return; }
+  localStorage.setItem(PWD_KEY, hashPwd(nw));
+  document.getElementById('old-pwd').value='';
+  document.getElementById('new-pwd').value='';
+  document.getElementById('confirm-pwd').value='';
+  document.getElementById('change-pwd-form').style.display='none';
+  toast('✅ Password badal gaya!');
+}
+
+// ══ DB ══
+const KEY='hk_db_v3';
+function loadDB(){try{return JSON.parse(localStorage.getItem(KEY))||{entries:[],payments:[]}}catch{return{entries:[],payments:[]}}}
+function saveDB(d){localStorage.setItem(KEY,JSON.stringify(d))}
+let db=loadDB();
+function nextId(){const a=db.entries.map(e=>e.id||0);return a.length?Math.max(...a)+1:1}
+
+document.getElementById('inp-dt').value=today();
+function today(){return new Date().toISOString().split('T')[0]}
+
+function refreshSelects(){
+  const names=[...new Set(db.entries.map(e=>e.dukandar))];
+  document.getElementById('dk-sugg').innerHTML=names.map(n=>`<option value="${xss(n)}">`).join('');
+  const sel=document.getElementById('rep-dk');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">-- Dukandar chunein --</option>'+
+    names.map(n=>`<option value="${xss(n)}"${n===cur?' selected':''}>${xss(n)}</option>`).join('');
+  const dr=document.getElementById('dr-dk');
+  const drc=dr.value;
+  dr.innerHTML='<option value="">-- Tamam Dukandar --</option>'+
+    names.map(n=>`<option value="${xss(n)}"${n===drc?' selected':''}>${xss(n)}</option>`).join('');
+}
+refreshSelects();
+
+// ══ TABS ══
+function showTab(t,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  btn.classList.add('active');
+  if(t==='list') renderList();
+  if(t==='settings') renderStats();
+}
+
+// ══ ADD ENTRY ══
+function addEntry(){
+  const dk=document.getElementById('inp-dk').value.trim();
+  const dt=document.getElementById('inp-dt').value;
+  const ds=document.getElementById('inp-ds').value.trim();
+  const pr=parseFloat(document.getElementById('inp-pr').value);
+  if(!dk||!dt||!ds||isNaN(pr)||pr<=0){toast('⚠️ Sab fields zaroor bharein!');return}
+  db.entries.push({id:nextId(),dukandar:dk,date:dt,desc:ds,price:pr});
+  saveDB(db);refreshSelects();
+  document.getElementById('inp-ds').value='';
+  document.getElementById('inp-pr').value='';
+  document.getElementById('inp-dt').value=today();
+  toast('✅ Entry save ho gayi!');
+}
+
+// ══ PAYMENT LOGIC ══
+function getPaidIds(dukandar){
+  return new Set(db.payments.filter(p=>p.dukandar===dukandar).flatMap(p=>p.entryIds||[]))
+}
+function getActive(dukandar){
+  const paid=getPaidIds(dukandar);
+  return db.entries.filter(e=>e.dukandar===dukandar&&!paid.has(e.id)).sort((a,b)=>a.date.localeCompare(b.date));
+}
+function getLastPay(dukandar){
+  const p=db.payments.filter(p=>p.dukandar===dukandar);
+  return p.length?p.sort((a,b)=>b.ts-a.ts)[0]:null;
+}
+
+// ══ DUKANDAR LIST ══
+function renderList(){
+  const names=[...new Set(db.entries.map(e=>e.dukandar))];
+  const c=document.getElementById('dk-list');
+  if(!names.length){c.innerHTML='<div class="empty"><span>🛒</span>Koi entry nahi abhi tak</div>';return}
+  c.innerHTML=names.map(n=>{
+    const act=getActive(n);
+    const tot=act.reduce((s,e)=>s+e.price,0);
+    const lp=getLastPay(n);
+    return`<div class="ditem" onclick="openModal('${js(n)}')">
+      <div>
+        <div class="dname">🏪 ${xss(n)}</div>
+        <div style="font-size:.67rem;color:var(--tl);margin-top:2px">${act.length} pending</div>
+        ${lp?`<div style="font-size:.64rem;color:var(--g5);margin-top:1px">✓ Aakhri: ${fmt(lp.date)}</div>`:''}
+      </div>
+      <div style="text-align:right">
+        <div class="dtotal">Rs. ${amt(tot)}</div>
+        <span class="dstatus ${tot===0?'sc':'sp'}">${tot===0?'✓ Clear':'Baqi'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══ MODAL ══
+function openModal(name){
+  document.getElementById('m-name').textContent=name;
+  const entries=getActive(name);
+  const total=entries.reduce((s,e)=>s+e.price,0);
+  const lp=getLastPay(name);
+  document.getElementById('m-entries').innerHTML=!entries.length
+    ?'<div class="empty"><span>✅</span>Sab clear hai!</div>'
+    :entries.map((e,i)=>`<div class="erow">
+      <div class="esno">${i+1}.</div>
+      <div style="flex:1;margin-left:5px">
+        <div class="edate">${fmt(e.date)}</div>
+        <div class="edesc">${xss(e.desc)}</div>
+        <div class="entry-actions">
+          <button class="ea-btn ea-edit" onclick="openEdit(${e.id})">✏️ Edit</button>
+          <button class="ea-btn ea-del" onclick="deleteEntry(${e.id},'modal','${js(e.dukandar)}')">🗑️ Delete</button>
+        </div>
+      </div>
+      <div class="eamt">Rs. ${amt(e.price)}</div>
+    </div>`).join('');
+  document.getElementById('m-total').innerHTML=entries.length
+    ?`<div class="tbox"><span class="tlbl">🧮 Kul Baqi</span><span class="tamt">Rs. ${amt(total)}</span></div>`:'';
+  document.getElementById('m-status').innerHTML=lp?`📅 Aakhri payment: ${fmt(lp.date)} — Rs. ${amt(lp.amount)}`:'';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+
+// ══ REPORT ══
+function loadReport(){
+  const name=document.getElementById('rep-dk').value;
+  if(!name){toast('⚠️ Pehle dukandar chunein');return}
+  const entries=getActive(name);
+  const total=entries.reduce((s,e)=>s+e.price,0);
+  const lp=getLastPay(name);
+  const rc=document.getElementById('rep-card');
+  const ps=document.getElementById('pay-sec');
+  const rw=document.getElementById('rec-wrap');
+  rw.style.display='none';
+  rc.style.display='block';
+  if(!entries.length){
+    rc.innerHTML=`<div class="ctitle">🏪 ${xss(name)}</div>
+      ${lp?`<div style="font-size:.7rem;color:var(--g5);font-weight:600;margin-bottom:8px">📅 Aakhri payment: ${fmt(lp.date)} — Rs. ${amt(lp.amount)}</div>`:''}
+      <div class="empty"><span>✅</span>Koi baqi nahi — sab clear hai!</div>`;
+    ps.style.display='none';return;
+  }
+  rc.innerHTML=`<div class="ctitle">🏪 ${xss(name)}</div>
+    ${lp?`<div style="font-size:.7rem;color:var(--g5);font-weight:600;margin-bottom:8px">📅 Aakhri payment ke baad: ${fmt(lp.date)}</div>`:''}
+    <div class="col-hdr"><span style="min-width:24px">#</span><span style="flex:1;margin:0 8px">Tarikh / Cheez</span><span>Raqam</span></div>
+    ${entries.map((e,i)=>`<div class="erow">
+      <div class="esno">${i+1}</div>
+      <div style="flex:1;margin-left:5px">
+        <div class="edate">${fmt(e.date)}</div>
+        <div class="edesc">${xss(e.desc)}</div>
+        <div class="entry-actions">
+          <button class="ea-btn ea-edit" onclick="openEdit(${e.id})">✏️ Edit</button>
+          <button class="ea-btn ea-del" onclick="deleteEntry(${e.id},'report')">🗑️ Delete</button>
+        </div>
+      </div>
+      <div class="eamt">Rs. ${amt(e.price)}</div>
+    </div>`).join('')}
+    <div class="tbox" style="margin-top:10px">
+      <span class="tlbl">🧮 Kul Baqi</span>
+      <span class="tamt">Rs. ${amt(total)}</span>
+    </div>`;
+  ps.style.display='block';
+}
+
+// ══ PARTIAL PAYMENT UI ══
+let partialMode=false;
+function togglePartial(){
+  partialMode=!partialMode;
+  const sec=document.getElementById('partial-sec');
+  const fullBtn=document.getElementById('full-pay-btn');
+  const partBtn=document.getElementById('partial-pay-btn');
+  const toggleBtn=document.getElementById('partial-toggle-btn');
+  if(partialMode){
+    sec.style.display='block';fullBtn.style.display='none';partBtn.style.display='block';
+    toggleBtn.textContent='↩️ Full Payment mode mein jao';buildChecklist();
+  } else {
+    sec.style.display='none';fullBtn.style.display='block';partBtn.style.display='none';
+    toggleBtn.textContent='☑️ Partial Payment (entries choose karein)';
+  }
+}
+function buildChecklist(){
+  const name=document.getElementById('rep-dk').value;
+  if(!name)return;
+  const entries=getActive(name);
+  document.getElementById('entry-checklist').innerHTML=entries.map((e,i)=>`
+    <div class="entry-check-row">
+      <input type="checkbox" id="ec-${e.id}" value="${e.id}" onchange="updatePartialSummary()" checked>
+      <div style="flex:1">
+        <div style="font-size:.67rem;color:var(--tl);font-weight:600">${fmt(e.date)}</div>
+        <div style="font-size:.77rem;color:var(--td)">${xss(e.desc)}</div>
+      </div>
+      <div style="font-size:.84rem;font-weight:700;color:var(--g6);white-space:nowrap">Rs. ${amt(e.price)}</div>
+    </div>`).join('');
+  updatePartialSummary();
+}
+function updatePartialSummary(){
+  const name=document.getElementById('rep-dk').value;
+  const entries=getActive(name);
+  const total=entries.reduce((s,e)=>s+e.price,0);
+  const checked=getCheckedIds();
+  const paying=entries.filter(e=>checked.has(e.id)).reduce((s,e)=>s+e.price,0);
+  const rem=total-paying;
+  const sum=document.getElementById('partial-summary');
+  if(checked.size>0){
+    sum.style.display='block';
+    document.getElementById('ps-count').textContent=checked.size+' entry';
+    document.getElementById('ps-paying').textContent='Rs. '+amt(paying);
+    document.getElementById('ps-rem').textContent=rem>0?'Rs. '+amt(rem):'✅ Kuch nahi';
+  } else { sum.style.display='none'; }
+}
+function getCheckedIds(){
+  return new Set([...document.querySelectorAll('#entry-checklist input[type=checkbox]:checked')].map(c=>parseInt(c.value)));
+}
+function selectAll(){document.querySelectorAll('#entry-checklist input[type=checkbox]').forEach(c=>c.checked=true);updatePartialSummary()}
+function deselectAll(){document.querySelectorAll('#entry-checklist input[type=checkbox]').forEach(c=>c.checked=false);updatePartialSummary()}
+
+// ══ MARK PAID ══
+async function markPaid(isPartial){
+  const name=document.getElementById('rep-dk').value;
+  const method=document.getElementById('pay-method').value;
+  if(!name){toast('⚠️ Pehle report load karein');return}
+  const allEntries=getActive(name);
+  if(!allEntries.length){toast('✅ Koi baqi nahi!');return}
+  let entriesToPay;
+  if(isPartial){
+    const checkedIds=getCheckedIds();
+    if(checkedIds.size===0){toast('⚠️ Kam az kam ek entry select karein!');return}
+    entriesToPay=allEntries.filter(e=>checkedIds.has(e.id));
+  } else { entriesToPay=allEntries; }
+  const total=entriesToPay.reduce((s,e)=>s+e.price,0);
+  const entryIds=entriesToPay.map(e=>e.id);
+  const td=today();
+  db.payments.push({dukandar:name,date:td,amount:total,method,entryIds,ts:Date.now(),isPartial});
+  saveDB(db);
+  if(isPartial){
+    partialMode=false;
+    document.getElementById('partial-sec').style.display='none';
+    document.getElementById('full-pay-btn').style.display='block';
+    document.getElementById('partial-pay-btn').style.display='none';
+    document.getElementById('partial-toggle-btn').textContent='☑️ Partial Payment (entries choose karein)';
+  }
+  const remainingEntries=allEntries.filter(e=>!entryIds.includes(e.id));
+  const remainingTotal=remainingEntries.reduce((s,e)=>s+e.price,0);
+  toast('🎨 Receipt ban rahi hai...');
+  setTimeout(async()=>{
+    await buildReceipt(name,entriesToPay,total,method,td,remainingTotal,isPartial);
+  },150);
+}
+
+// ══ CANVAS RECEIPT ══
+let lastCanvas=null;
+async function buildReceipt(dukandar,entries,total,method,payDate,remainingTotal,isPartial){
+  polyfillRoundRect();
+  const canvas=document.getElementById('receiptCanvas');
+  const ctx=canvas.getContext('2d');
+  const W=520,ROW=40,HEAD=200,FOOT=isPartial?190:140;
+  const H=HEAD+entries.length*ROW+FOOT;
+  canvas.width=W;canvas.height=H;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle='#f8fdf8';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(200,230,200,0.35)';ctx.lineWidth=.5;
+  for(let i=0;i<H;i+=20){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke()}
+  const tg=ctx.createLinearGradient(0,0,W,0);
+  tg.addColorStop(0,'#1b5e20');tg.addColorStop(1,'#43a047');
+  ctx.fillStyle=tg;ctx.fillRect(0,0,W,88);
+  ctx.save();ctx.globalAlpha=.07;ctx.font='90px serif';ctx.fillStyle='#fff';ctx.textBaseline='top';ctx.fillText('🌿',W-100,5);ctx.restore();
+  ctx.fillStyle='#fff';ctx.font='bold 22px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillText('HOME KHAATA',W/2,10);
+  ctx.font='12px Poppins,Arial,sans-serif';ctx.globalAlpha=.8;ctx.fillText('گھر کا روزانہ حساب کتاب',W/2,36);ctx.globalAlpha=1;
+  ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.fillStyle='rgba(255,255,255,.65)';ctx.fillText('TID: HK-'+Date.now().toString().slice(-9),W/2,56);
+  ctx.fillStyle='#fff';ctx.strokeStyle='#a5d6a7';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.roundRect(20,76,W-40,50,10);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#1b5e20';ctx.font='bold 14px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('🏪  '+dukandar,W/2,94);
+  ctx.fillStyle='#555';ctx.font='11px Poppins,Arial,sans-serif';
+  ctx.fillText('Payment Date: '+fmt(payDate)+'   |   Via: '+method,W/2,112);
+  ctx.strokeStyle='#c8e6c9';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+  ctx.beginPath();ctx.moveTo(20,136);ctx.lineTo(W-20,136);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#43a047';ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.fillText('#',26,148);ctx.fillText('Tarikh',46,148);ctx.fillText('Cheez / Description',142,148);
+  ctx.textAlign='right';ctx.fillText('Raqam (Rs.)',W-24,148);
+  ctx.strokeStyle='#a5d6a7';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,162);ctx.lineTo(W-20,162);ctx.stroke();
+  let y=HEAD;
+  entries.forEach((e,i)=>{
+    if(i%2===0){ctx.fillStyle='rgba(232,245,233,.55)';ctx.fillRect(20,y-ROW+8,W-40,ROW-2)}
+    const my=y-ROW/2+8;ctx.textBaseline='middle';
+    ctx.fillStyle='#90a4ae';ctx.font='10px Poppins,Arial,sans-serif';ctx.textAlign='left';
+    ctx.fillText(i+1,26,my);ctx.fillText(fmtS(e.date),46,my);
+    ctx.fillStyle='#212121';ctx.font='11px Poppins,Arial,sans-serif';
+    const dc=e.desc.length>26?e.desc.slice(0,26)+'…':e.desc;ctx.fillText(dc,142,my);
+    ctx.fillStyle='#2e7d32';ctx.font='bold 11px Poppins,Arial,sans-serif';ctx.textAlign='right';
+    ctx.fillText('Rs. '+amt(e.price),W-24,my);y+=ROW;
+  });
+  ctx.strokeStyle='#66bb6a';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(20,y+6);ctx.lineTo(W-20,y+6);ctx.stroke();
+  const ty=y+16;
+  ctx.fillStyle='#e8f5e9';ctx.strokeStyle='#66bb6a';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(20,ty,W-40,48,10);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#1b5e20';ctx.font='bold 13px Poppins,Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText('🧮  Kul Paid (Is Dafa)',36,ty+24);
+  ctx.font='bold 17px Poppins,Arial,sans-serif';ctx.textAlign='right';ctx.fillText('Rs. '+amt(total),W-28,ty+24);
+  let ny=ty+60;
+  if(isPartial&&remainingTotal>0){
+    const ry=ty+58;
+    ctx.fillStyle='#fff3e0';ctx.strokeStyle='#ffb74d';ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(20,ry,W-40,48,10);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#e65100';ctx.font='bold 13px Poppins,Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText('🕐  Abhi Baki Udhar',36,ry+24);
+    ctx.font='bold 17px Poppins,Arial,sans-serif';ctx.textAlign='right';ctx.fillText('Rs. '+amt(remainingTotal),W-28,ry+24);
+    ny=ry+60;
+  }
+  drawStamp(ctx,W/2-60,HEAD+(entries.length*ROW)/2,method);
+  ctx.fillStyle='#666';ctx.font='11px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillText('Securely paid via '+method+' on '+fmt(payDate),W/2,ny);
+  const bg2=ctx.createLinearGradient(0,H-44,W,H);
+  bg2.addColorStop(0,'#1b5e20');bg2.addColorStop(1,'#43a047');
+  ctx.fillStyle=bg2;ctx.beginPath();ctx.roundRect(0,H-44,W,44,[0,0,6,6]);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('Home Khaata  •  گھر کا حساب  •  Powered by FGI',W/2,H-22);
+  lastCanvas=canvas;
+  const rw=document.getElementById('rec-wrap');
+  rw.style.display='block';rw.scrollIntoView({behavior:'smooth',block:'nearest'});
+  setTimeout(()=>{
+    triggerDownload(canvas,dukandar,payDate);
+    toast('📥 Receipt download folder mein save ho gayi!');
+    loadReport();
+    document.getElementById('rec-wrap').style.display='block';
+  },400);
+}
+
+function triggerDownload(canvas,name,date){
+  const a=document.createElement('a');
+  a.download='HomeKhaata_'+name.replace(/\s+/g,'_')+'_'+date+'.png';
+  a.href=canvas.toDataURL('image/png');
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+function manualDownload(){
+  const c=document.getElementById('receiptCanvas');
+  triggerDownload(c,document.getElementById('rep-dk').value||'receipt',today());
+}
+
+// ══ STAMP ══
+function drawStamp(ctx,cx,cy,method){
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(-0.38);ctx.globalAlpha=0.82;
+  ctx.strokeStyle='#c62828';ctx.lineWidth=4;
+  ctx.beginPath();ctx.arc(0,0,48,0,Math.PI*2);ctx.stroke();
+  ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,40,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='rgba(198,40,40,.07)';ctx.beginPath();ctx.arc(0,0,48,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#c62828';ctx.font='bold 22px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('PAID',0,-4);ctx.font='bold 8px Poppins,Arial,sans-serif';ctx.fillText('via '+method,0,13);
+  ctx.font='bold 7px Poppins,Arial,sans-serif';arcTxt(ctx,'SECURELY',0,0,33,-Math.PI*.68,Math.PI*.68);
+  ctx.restore();
+}
+function arcTxt(ctx,text,cx,cy,r,sa,ea){
+  const step=(ea-sa)/(text.length-1);
+  for(let i=0;i<text.length;i++){
+    const a=sa+i*step-Math.PI/2,x=cx+r*Math.cos(a),y=cy+r*Math.sin(a);
+    ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/2);ctx.fillText(text[i],0,0);ctx.restore();
+  }
+}
+
+// ══ DATE RANGE REPORT (with payments) ══
+function buildRangeReport(){
+  const from=document.getElementById('dr-from').value;
+  const to=document.getElementById('dr-to').value;
+  if(!from||!to){toast('⚠️ Dono tarikh bharein!');return}
+  if(from>to){toast('⚠️ "Shuru" tarikh pehle honi chahiye!');return}
+  const dkFilter=document.getElementById('dr-dk').value;
+
+  // Get entries in range
+  let entries=db.entries.filter(e=>e.date>=from&&e.date<=to);
+  if(dkFilter) entries=entries.filter(e=>e.dukandar===dkFilter);
+  entries=entries.sort((a,b)=>a.date.localeCompare(b.date));
+
+  // Get payments in range
+  let payments=db.payments.filter(p=>p.date>=from&&p.date<=to);
+  if(dkFilter) payments=payments.filter(p=>p.dukandar===dkFilter);
+  payments=payments.sort((a,b)=>a.date.localeCompare(b.date));
+
+  const card=document.getElementById('range-rep-card');
+  const titleEl=document.getElementById('range-rep-title');
+  const body=document.getElementById('range-rep-body');
+
+  titleEl.textContent=(dkFilter||'Tamam')+' | '+fmt(from)+' → '+fmt(to);
+  card.style.display='block';
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  if(!entries.length&&!payments.length){
+    body.innerHTML='<div class="empty"><span>📭</span>Is period mein koi entry nahi</div>';
+    document.getElementById('rangeCanvas').style.display='none';
+    return;
+  }
+
+  // Build combined timeline (entries + payments merged by date)
+  const totalExpense=entries.reduce((s,e)=>s+e.price,0);
+  const totalPaid=payments.reduce((s,p)=>s+p.amount,0);
+  const netBalance=totalExpense-totalPaid;
+
+  // Build HTML
+  let html='';
+
+  // Summary at top
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+    <div style="background:#e8f5e9;border:1.5px solid var(--g3);border-radius:10px;padding:10px;text-align:center">
+      <div style="font-size:.67rem;color:var(--tl);font-weight:600">Kul Kharcha</div>
+      <div style="font-size:.88rem;font-weight:800;color:var(--acc)">Rs. ${amt(totalExpense)}</div>
+    </div>
+    <div style="background:#e8f5e9;border:1.5px solid var(--g3);border-radius:10px;padding:10px;text-align:center">
+      <div style="font-size:.67rem;color:var(--tl);font-weight:600">Kul Paid</div>
+      <div style="font-size:.88rem;font-weight:800;color:var(--g6)">Rs. ${amt(totalPaid)}</div>
+    </div>
+    <div style="background:${netBalance>0?'#fff3e0':'#e8f5e9'};border:1.5px solid ${netBalance>0?'#ffb74d':'var(--g3)'};border-radius:10px;padding:10px;text-align:center">
+      <div style="font-size:.67rem;color:var(--tl);font-weight:600">Baki Udhar</div>
+      <div style="font-size:.88rem;font-weight:800;color:${netBalance>0?'#e65100':'var(--g6)'}">Rs. ${amt(netBalance)}</div>
+    </div>
+  </div>`;
+
+  // Entries section
+  if(entries.length){
+    html+=`<div class="section-divider"><span>🛒 Kharidari (${entries.length})</span></div>`;
+    html+=`<div class="col-hdr"><span style="min-width:24px">#</span><span style="flex:1;margin:0 8px">Tarikh / Cheez</span><span>Raqam</span></div>`;
+    html+=entries.map((e,i)=>`<div class="erow">
+      <div class="esno">${i+1}</div>
+      <div style="flex:1;margin-left:5px">
+        <div class="edate">${fmt(e.date)} ${dkFilter?'':'<span style="color:var(--acc);font-weight:700">· '+xss(e.dukandar)+'</span>'}</div>
+        <div class="edesc">${xss(e.desc)}</div>
+      </div>
+      <div class="eamt">Rs. ${amt(e.price)}</div>
+    </div>`).join('');
+    html+=`<div class="range-total-box" style="margin-bottom:12px"><span class="rtlbl">🛒 Kul Kharcha</span><span class="rtamt" style="color:var(--acc)">Rs. ${amt(totalExpense)}</span></div>`;
+  }
+
+  // Payments section
+  if(payments.length){
+    html+=`<div class="section-divider"><span>💳 Payments (${payments.length})</span></div>`;
+    html+=payments.map((p,i)=>`<div class="prow">
+      <div>
+        <div class="prow-label">✅ Payment #${i+1} — ${xss(p.dukandar)}</div>
+        <div class="prow-meta">${fmt(p.date)} · ${xss(p.method)} · ${p.isPartial?'Partial':'Full'}</div>
+      </div>
+      <div class="prow-amt">Rs. ${amt(p.amount)}</div>
+    </div>`).join('');
+    html+=`<div class="range-total-box" style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-color:var(--g3);margin-bottom:12px"><span class="rtlbl">💳 Kul Paid</span><span class="rtamt">Rs. ${amt(totalPaid)}</span></div>`;
+  }
+
+  // Net balance carry box
+  html+=`<div class="section-divider"><span>📊 Balance</span></div>`;
+  html+=`<div class="carry-box ${netBalance<=0?'green-box':''}">
+    <div>
+      <div class="carry-lbl">${netBalance>0?'🕐 Abhi Tak Baki Udhar':'✅ Sab Clear — Koi Baqi Nahi'}</div>
+      <div style="font-size:.63rem;color:${netBalance>0?'#bf360c':'var(--g6)'};margin-top:3px">${fmt(from)} se ${fmt(to)} tak</div>
+    </div>
+    <div class="carry-amt">Rs. ${amt(Math.abs(netBalance))}</div>
+  </div>`;
+
+  body.innerHTML=html;
+
+  // Build canvas
+  buildRangeCanvas(entries,payments,totalExpense,totalPaid,netBalance,from,to,dkFilter);
+}
+
+function buildRangeCanvas(entries,payments,totalExpense,totalPaid,netBalance,from,to,dkFilter){
+  polyfillRoundRect();
+  const canvas=document.getElementById('rangeCanvas');
+  canvas.style.display='block';
+  const ctx=canvas.getContext('2d');
+  const W=520,ROW=34,HEAD=200,PROW=32;
+  const itemCount=entries.length+payments.length;
+  const FOOT=120;
+  const H=HEAD+(entries.length*ROW)+(payments.length>0?40+payments.length*PROW:0)+FOOT;
+  canvas.width=W;canvas.height=H;
+  ctx.setTransform(1,0,0,1,0,0);
+
+  // BG
+  ctx.fillStyle='#f8fdf8';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(200,230,200,0.3)';ctx.lineWidth=.5;
+  for(let i=0;i<H;i+=20){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke()}
+
+  // Top bar
+  const tg=ctx.createLinearGradient(0,0,W,0);
+  tg.addColorStop(0,'#1b5e20');tg.addColorStop(1,'#43a047');
+  ctx.fillStyle=tg;ctx.fillRect(0,0,W,78);
+  ctx.fillStyle='#fff';ctx.font='bold 17px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillText('HOME KHAATA — DATE RANGE REPORT',W/2,10);
+  ctx.font='11px Poppins,Arial,sans-serif';ctx.globalAlpha=.8;ctx.fillText('گھر کا حساب — Period Report',W/2,32);ctx.globalAlpha=1;
+
+  // Info box
+  ctx.fillStyle='#fff';ctx.strokeStyle='#a5d6a7';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.roundRect(20,66,W-40,52,10);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#1b5e20';ctx.font='bold 12px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('📅  '+fmt(from)+'  →  '+fmt(to),W/2,82);
+  ctx.fillStyle='#555';ctx.font='10px Poppins,Arial,sans-serif';
+  ctx.fillText((dkFilter?'🏪 '+dkFilter:'🏪 Tamam Dukandar')+'   |   Entries: '+entries.length+'  Payments: '+payments.length,W/2,100);
+
+  // Summary boxes
+  const bw=(W-50)/3, bx=[20,20+bw+5,20+bw*2+10];
+  const bData=[
+    {lbl:'Kharidari',val:'Rs. '+amt(totalExpense),bg:'#fff3e0',bc:'#ffb74d',tc:'#e65100'},
+    {lbl:'Kul Paid',val:'Rs. '+amt(totalPaid),bg:'#e8f5e9',bc:'#a5d6a7',tc:'#1b5e20'},
+    {lbl:netBalance>0?'Baki':'Clear',val:'Rs. '+amt(Math.abs(netBalance)),bg:netBalance>0?'#fce4ec':'#e8f5e9',bc:netBalance>0?'#ef9a9a':'#a5d6a7',tc:netBalance>0?'#c62828':'#1b5e20'},
+  ];
+  bData.forEach((b,i)=>{
+    ctx.fillStyle=b.bg;ctx.strokeStyle=b.bc;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(bx[i],126,bw,44,8);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#888';ctx.font='8px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillText(b.lbl,bx[i]+bw/2,130);
+    ctx.fillStyle=b.tc;ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.textBaseline='top';
+    ctx.fillText(b.val,bx[i]+bw/2,142);
+  });
+
+  let y=HEAD;
+
+  // Entries
+  if(entries.length){
+    ctx.fillStyle='#43a047';ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText('🛒 KHARIDARI',26,y);y+=18;
+    ctx.strokeStyle='#a5d6a7';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,y);ctx.lineTo(W-20,y);ctx.stroke();y+=6;
+    entries.forEach((e,i)=>{
+      if(i%2===0){ctx.fillStyle='rgba(232,245,233,.5)';ctx.fillRect(20,y,W-40,ROW-2)}
+      const my=y+ROW/2-1;ctx.textBaseline='middle';
+      ctx.fillStyle='#90a4ae';ctx.font='9px Poppins,Arial,sans-serif';ctx.textAlign='left';
+      ctx.fillText(i+1,26,my);ctx.fillText(fmtS(e.date),44,my);
+      ctx.fillStyle='#333';ctx.font='10px Poppins,Arial,sans-serif';
+      let lbl=dkFilter?e.desc:(e.dukandar.length>10?e.dukandar.slice(0,10)+'…':e.dukandar)+' · '+e.desc;
+      if(lbl.length>30)lbl=lbl.slice(0,30)+'…';
+      ctx.fillText(lbl,120,my);
+      ctx.fillStyle='#e65100';ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.textAlign='right';
+      ctx.fillText('Rs. '+amt(e.price),W-24,my);
+      y+=ROW;
+    });
+    // entry subtotal
+    ctx.fillStyle='#fff3e0';ctx.strokeStyle='#ffb74d';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(20,y+4,W-40,34,8);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#e65100';ctx.font='bold 11px Poppins,Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText('🛒  Kul Kharcha',36,y+21);
+    ctx.textAlign='right';ctx.fillText('Rs. '+amt(totalExpense),W-28,y+21);
+    y+=48;
+  }
+
+  // Payments
+  if(payments.length){
+    ctx.fillStyle='#2e7d32';ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText('💳 PAYMENTS',26,y);y+=18;
+    ctx.strokeStyle='#a5d6a7';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,y);ctx.lineTo(W-20,y);ctx.stroke();y+=6;
+    payments.forEach((p,i)=>{
+      ctx.fillStyle=i%2===0?'rgba(200,230,200,.35)':'rgba(232,245,233,.25)';ctx.fillRect(20,y,W-40,PROW-2);
+      const my=y+PROW/2-1;ctx.textBaseline='middle';
+      ctx.fillStyle='#2e7d32';ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.textAlign='left';
+      ctx.fillText('✓ '+(dkFilter?'Payment':(p.dukandar.length>14?p.dukandar.slice(0,14)+'…':p.dukandar)),26,my);
+      ctx.fillStyle='#888';ctx.font='9px Poppins,Arial,sans-serif';
+      ctx.fillText(fmtS(p.date)+' · '+p.method,26,my+12);
+      ctx.fillStyle='#1b5e20';ctx.font='bold 11px Poppins,Arial,sans-serif';ctx.textAlign='right';
+      ctx.fillText('Rs. '+amt(p.amount),W-24,my);
+      y+=PROW;
+    });
+    // payment subtotal
+    ctx.fillStyle='#e8f5e9';ctx.strokeStyle='#66bb6a';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(20,y+4,W-40,34,8);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#1b5e20';ctx.font='bold 11px Poppins,Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText('💳  Kul Paid',36,y+21);
+    ctx.textAlign='right';ctx.fillText('Rs. '+amt(totalPaid),W-28,y+21);
+    y+=48;
+  }
+
+  // Net balance box
+  const bcolor=netBalance>0?'#fff3e0':'#e8f5e9';
+  const bstroke=netBalance>0?'#ffb74d':'#66bb6a';
+  const btextc=netBalance>0?'#e65100':'#1b5e20';
+  ctx.fillStyle=bcolor;ctx.strokeStyle=bstroke;ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(20,y+8,W-40,46,10);ctx.fill();ctx.stroke();
+  ctx.fillStyle=btextc;ctx.font='bold 12px Poppins,Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText(netBalance>0?'🕐  Abhi Baki Udhar':'✅  Sab Clear — Koi Baqi Nahi',36,y+31);
+  ctx.font='bold 15px Poppins,Arial,sans-serif';ctx.textAlign='right';
+  ctx.fillText('Rs. '+amt(Math.abs(netBalance)),W-28,y+31);
+  y+=62;
+
+  // Footer
+  const fy=H-34;
+  const bg2=ctx.createLinearGradient(0,fy,W,H);
+  bg2.addColorStop(0,'#1b5e20');bg2.addColorStop(1,'#43a047');
+  ctx.fillStyle=bg2;ctx.beginPath();ctx.roundRect(0,fy,W,34,[0,0,6,6]);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 9px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('Home Khaata  •  گھر کا حساب  •  Powered by FGI',W/2,fy+17);
+}
+
+function downloadRangeImage(){
+  const canvas=document.getElementById('rangeCanvas');
+  if(!canvas||canvas.style.display==='none'){toast('⚠️ Pehle report banayein!');return}
+  const from=document.getElementById('dr-from').value||'';
+  const to=document.getElementById('dr-to').value||'';
+  const dk=document.getElementById('dr-dk').value||'All';
+  const a=document.createElement('a');
+  a.download='HomeKhaata_Range_'+dk.replace(/\s+/g,'_')+'_'+from+'_to_'+to+'.png';
+  a.href=canvas.toDataURL('image/png');
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('📥 Range report image download ho gayi!');
+}
+
+// ══ EDIT ENTRY ══
+function openEdit(id){
+  const e=db.entries.find(x=>x.id===id);
+  if(!e){toast('Entry nahi mili!');return}
+  document.getElementById('edit-id').value=id;
+  document.getElementById('edit-dk').value=e.dukandar;
+  document.getElementById('edit-dt').value=e.date;
+  document.getElementById('edit-ds').value=e.desc;
+  document.getElementById('edit-pr').value=e.price;
+  document.getElementById('edit-overlay').classList.add('open');
+}
+function closeEdit(){document.getElementById('edit-overlay').classList.remove('open')}
+function saveEdit(){
+  const id=parseInt(document.getElementById('edit-id').value);
+  const dk=document.getElementById('edit-dk').value.trim();
+  const dt=document.getElementById('edit-dt').value;
+  const ds=document.getElementById('edit-ds').value.trim();
+  const pr=parseFloat(document.getElementById('edit-pr').value);
+  if(!dk||!dt||!ds||isNaN(pr)||pr<=0){toast('⚠️ Sab fields bharein!');return}
+  const idx=db.entries.findIndex(x=>x.id===id);
+  if(idx===-1){toast('Entry nahi mili!');return}
+  db.entries[idx]={...db.entries[idx],dukandar:dk,date:dt,desc:ds,price:pr};
+  saveDB(db);refreshSelects();closeEdit();loadReport();
+  toast('✅ Entry update ho gayi!');
+}
+
+// ══ DELETE ENTRY ══
+function deleteEntry(id,from,modalName){
+  if(!confirm('Kya yeh entry delete karni hai?\n(Ye action undo nahi ho sakta)')){return}
+  db.entries=db.entries.filter(e=>e.id!==id);
+  db.payments=db.payments.map(p=>{
+    if(p.entryIds) p.entryIds=p.entryIds.filter(eid=>eid!==id);
+    return p;
+  }).filter(p=>!p.entryIds||p.entryIds.length>0);
+  saveDB(db);refreshSelects();
+  if(from==='modal'&&modalName) openModal(modalName);
+  else loadReport();
+  toast('🗑️ Entry delete ho gayi!');
+}
+
+// ══ EXPORT / IMPORT ══
+function exportData(){
+  const d={...db, exportedAt:new Date().toISOString(), version:'v6'};
+  const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  const date=today().replace(/-/g,'');
+  a.download='HomeKhaata_Backup_'+date+'.json';
+  a.href=URL.createObjectURL(blob);
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('📤 Backup file download ho gayi!');
+}
+
+function importData(event){
+  const file=event.target.files[0];
+  if(!file){return}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const imported=JSON.parse(e.target.result);
+      if(!imported.entries||!Array.isArray(imported.entries)){
+        toast('❌ File valid nahi — entries nahi mili!');return;
+      }
+      if(!confirm(`Import karein?\n\nFile mein:\n• ${imported.entries.length} entries\n• ${(imported.payments||[]).length} payments\n\nYeh aapka MAUJUDA data REPLACE kar dega!\nPehle backup zaroor lein.`)){
+        event.target.value='';return;
+      }
+      db={entries:imported.entries,payments:imported.payments||[]};
+      saveDB(db);refreshSelects();renderStats();
+      toast('✅ Data import ho gaya! '+imported.entries.length+' entries load hui');
+    } catch(err){
+      toast('❌ File parse error: '+err.message);
+    }
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function clearAllData(){
+  if(!confirm('⚠️ KHANDAAN SANNATA!\n\nSab entries aur payments delete ho jayengi!\n\nPehle EXPORT karein!\n\nKya aap PAKKA yaqeen se delete karna chahte hain?')) return;
+  if(!confirm('DOBARA CONFIRM:\nSab data DELETE ho jaye ga. Wapas nahi aayega!')) return;
+  db={entries:[],payments:[]};
+  saveDB(db);refreshSelects();renderStats();
+  toast('🗑️ Sab data delete ho gaya');
+}
+
+// ══ STATS ══
+function renderStats(){
+  const names=[...new Set(db.entries.map(e=>e.dukandar))];
+  const totalBaqi=names.reduce((s,n)=>s+getActive(n).reduce((a,e)=>a+e.price,0),0);
+  const totalPaid=db.payments.reduce((s,p)=>s+p.amount,0);
+  const thisMonth=today().slice(0,7);
+  const monthSpend=db.entries.filter(e=>e.date.startsWith(thisMonth)).reduce((s,e)=>s+e.price,0);
+  document.getElementById('stat-grid').innerHTML=`
+    <div class="stat-box"><div class="stat-val">${db.entries.length}</div><div class="stat-lbl">Kul Entries</div></div>
+    <div class="stat-box"><div class="stat-val">${names.length}</div><div class="stat-lbl">Dukandar</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--acc)">Rs. ${amt(totalBaqi)}</div><div class="stat-lbl">Abhi Baqi</div></div>
+    <div class="stat-box"><div class="stat-val">Rs. ${amt(monthSpend)}</div><div class="stat-lbl">Is Mahine Kharcha</div></div>`;
+}
+
+// ══ PWA ══
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  document.getElementById('pwa-install-btn').style.display='block';
+});
+function installPWA(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(r=>{
+      if(r.outcome==='accepted') toast('✅ App install ho gayi!');
+      deferredPrompt=null;
+      document.getElementById('pwa-install-btn').style.display='none';
+    });
+  } else { toast('ℹ️ Browser menu se "Add to Home Screen" use karein'); }
+}
+
+// Service Worker register
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(()=>{
+    console.log('SW registered');
+  }).catch(()=>{});
+}
+
+// ══ POLYFILL ══
+function polyfillRoundRect(){
+  if(!CanvasRenderingContext2D.prototype.roundRect){
+    CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+      if(typeof r==='number') r=[r,r,r,r];
+      else if(Array.isArray(r)&&r.length===1) r=[r[0],r[0],r[0],r[0]];
+      else if(Array.isArray(r)&&r.length===2) r=[r[0],r[1],r[0],r[1]];
+      else if(Array.isArray(r)&&r.length===3) r=[r[0],r[1],r[2],r[1]];
+      this.beginPath();
+      this.moveTo(x+r[0],y);this.lineTo(x+w-r[1],y);this.quadraticCurveTo(x+w,y,x+w,y+r[1]);
+      this.lineTo(x+w,y+h-r[2]);this.quadraticCurveTo(x+w,y+h,x+w-r[2],y+h);
+      this.lineTo(x+r[3],y+h);this.quadraticCurveTo(x,y+h,x,y+h-r[3]);
+      this.lineTo(x,y+r[0]);this.quadraticCurveTo(x,y,x+r[0],y);
+      this.closePath();return this;
+    };
+  }
+}
+
+// ══ HELPERS ══
+function fmt(d){if(!d)return'';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y.slice(2)}`}
+function fmtS(d){if(!d)return'';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y.slice(2)}`}
+function amt(n){return(+n||0).toLocaleString('en-PK',{minimumFractionDigits:2})}
+function xss(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function js(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+
+let toastT;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+document.getElementById('edit-overlay').addEventListener('click',function(e){if(e.target===this)closeEdit()});
+
+// Default date range
+(function(){
+  const t=today();
+  document.getElementById('dr-from').value=t.slice(0,7)+'-01';
+  document.getElementById('dr-to').value=t;
+})();
+
+// Init lock screen
+initLockScreen();
+</script>
+</body>
+</html>
