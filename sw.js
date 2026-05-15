@@ -1,4 +1,4 @@
-const CACHE_NAME = 'home-khaata-v7';
+const CACHE_NAME = 'home-khaata-v8';
 const urlsToCache = [
   './',
   './index.html',
