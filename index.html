@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Home Khaata">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{--g1:#e8f5e9;--g2:#c8e6c9;--g3:#a5d6a7;--g5:#43a047;--g6:#2e7d32;--gd:#1b5e20;--w:#fff;--td:#1a2e1a;--tm:#3d5a3d;--tl:#6b8f6b;--acc:#e65100;--red:#c62828;--sh:0 4px 20px rgba(46,125,50,0.13);--r:14px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -61,7 +62,7 @@ body{font-family:'Poppins',sans-serif;background:linear-gradient(160deg,#e8f5e9 
 .tb{flex:1;padding:10px 6px;background:none;border:none;font-family:'Poppins',sans-serif;font-size:.7rem;font-weight:600;color:var(--tm);cursor:pointer;transition:.2s;border-bottom:3px solid transparent}
 .tb.active{color:var(--g6);border-bottom-color:var(--g6);background:var(--w)}
 .tb span{display:block;font-size:.9rem}
-.panel{display:none;padding:12px 12px 90px}.panel.active{display:block}
+.panel{display:none;padding:12px 12px 120px}.panel.active{display:block}
 .card{background:var(--w);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--sh);border:1px solid var(--g2)}
 .ctitle{font-size:.8rem;font-weight:700;color:var(--g6);margin-bottom:10px;display:flex;align-items:center;gap:5px}
 label{display:block;font-size:.7rem;font-weight:600;color:var(--tm);margin-bottom:3px;margin-top:10px}
@@ -269,7 +270,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <div class="card" id="rec-wrap" style="display:none">
     <div class="ctitle">🧾 Receipt</div>
     <canvas id="receiptCanvas"></canvas>
-    <button class="btn btn-primary" onclick="downloadReceipt()" style="margin-top:10px">⬇️ Download / Share</button>
+    <button class="btn btn-primary" onclick="downloadReceipt()" style="margin-top:10px;margin-bottom:16px;position:relative;z-index:10;">⬇️ Download / Share</button>
   </div>
   <div class="card">
     <div class="ctitle">📅 Date Range Report</div>
@@ -284,6 +285,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <div class="card" id="range-rep-card" style="display:none">
     <div class="ctitle">📅 <span id="range-rep-title"></span></div>
     <div id="range-rep-body"></div>
+    <button class="btn btn-primary" onclick="shareRangeReport()" style="margin-top:12px;margin-bottom:6px;position:relative;z-index:10;">📸 Image Banao / Customer Ko Bhejo</button>
   </div>
 </div>
 
@@ -448,11 +450,7 @@ async function saveSecretQData(q,a){
 async function loadSecretQData(){
   const raw=await idbGet('secret_q')||localStorage.getItem('hk_secret_v9')||localStorage.getItem('hk_secret_v1');
   if(!raw)return null;
-  try{
-    const parsed=JSON.parse(raw);
-    // Handle old hashed format (v8) vs new plain format (v9)
-    return parsed;
-  }catch(e){return null;}
+  try{const parsed=JSON.parse(raw);return parsed;}catch(e){return null;}
 }
 
 async function saveSecretQuestion(){
@@ -622,7 +620,6 @@ async function loadDB(){
   if(data&&data.entries){
     db=data;
   }else{
-    // Migrate from old localStorage (v8)
     try{
       const old=localStorage.getItem('hk_db_v3');
       if(old){const p=JSON.parse(old);if(p&&p.entries){db=p;await idbSet('hkdata',db);toast('✅ Data v8 se migrate ho gaya!');}}
@@ -793,7 +790,7 @@ async function buildReceipt(dukandar,entries,total,method,payDate,remainingTotal
 function downloadReceipt(){
   if(!_lastReceiptCanvas){toast('⚠️ Pehle payment karein!');return;}
   _lastReceiptCanvas.toBlob(blob=>{
-    const fname='HomeKhaata_'+( document.getElementById('rep-dk').value||'receipt').replace(/\s+/g,'_')+'_'+today()+'.png';
+    const fname='HomeKhaata_'+(document.getElementById('rep-dk').value||'receipt').replace(/\s+/g,'_')+'_'+today()+'.png';
     openFolderPicker('📸 Receipt Kahan Save?','Receipt image save karein',blob,fname);
   },'image/png',1.0);
 }
@@ -807,6 +804,9 @@ function drawStamp(ctx,cx,cy,method){
   ctx.restore();
 }
 
+// ============================================================
+//  RANGE REPORT
+// ============================================================
 function buildRangeReport(){
   const from=document.getElementById('dr-from').value,to=document.getElementById('dr-to').value;
   if(!from||!to){toast('⚠️ Tarikh bharein!');return;}
@@ -827,6 +827,31 @@ function buildRangeReport(){
     <div style="background:${netBalance>0?'#fff3e0':'#e8f5e9'};border:1.5px solid ${netBalance>0?'#ffb74d':'var(--g3)'};border-radius:10px;padding:10px;text-align:center"><div style="font-size:.67rem;color:var(--tl)">Baki</div><div style="font-size:.88rem;font-weight:800;color:${netBalance>0?'#e65100':'var(--g6)'}">Rs. ${amt(netBalance)}</div></div></div>
     ${entries.map((e,i)=>`<div class="erow"><div class="esno">${i+1}</div><div style="flex:1;margin-left:5px"><div class="edate">${fmt(e.date)}${dkFilter?'':' · '+xss(e.dukandar)}</div><div class="edesc">${xss(e.desc)}</div></div><div class="eamt">Rs. ${amt(e.price)}</div></div>`).join('')}
     <div class="carry-box ${netBalance<=0?'green-box':''}"><div><div class="carry-lbl">${netBalance>0?'🕐 Baki':'✅ Clear'}</div></div><div class="carry-amt">Rs. ${amt(Math.abs(netBalance))}</div></div>`;
+}
+
+// ============================================================
+//  SHARE RANGE REPORT AS IMAGE
+// ============================================================
+function shareRangeReport(){
+  const card=document.getElementById('range-rep-card');
+  if(!card||card.style.display==='none'){toast('⚠️ Pehle Range Report load karein!');return;}
+  toast('📸 Image bana raha hai...');
+  setTimeout(()=>{
+    html2canvas(card,{
+      scale:2,
+      backgroundColor:'#ffffff',
+      useCORS:true,
+      logging:false
+    }).then(canvas=>{
+      canvas.toBlob(blob=>{
+        const title=document.getElementById('range-rep-title').textContent||'report';
+        const fname='RangeReport_'+title.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30)+'_'+today().replace(/-/g,'')+'.png';
+        openFolderPicker('📸 Report Image Save Karein','Customer ko share karne ke liye',blob,fname);
+      },'image/png',1.0);
+    }).catch(err=>{
+      toast('❌ Image error: '+err.message);
+    });
+  },300);
 }
 
 function openEdit(id){
@@ -854,7 +879,7 @@ async function deleteEntry(id,from,modalName){
 }
 
 // ============================================================
-//  EXPORT / IMPORT — Folder Picker
+//  EXPORT / IMPORT
 // ============================================================
 function exportData(){
   const d={...db,exportedAt:new Date().toISOString(),version:'v9'};
