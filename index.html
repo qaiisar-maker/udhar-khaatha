@@ -270,6 +270,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <div class="card" id="rec-wrap" style="display:none">
     <div class="ctitle">🧾 Receipt</div>
     <canvas id="receiptCanvas"></canvas>
+    <!-- FIX 1: Download button directly triggers folder picker with saved blob -->
     <button class="btn btn-primary" onclick="downloadReceipt()" style="margin-top:10px;margin-bottom:16px;position:relative;z-index:10;">⬇️ Download / Share</button>
   </div>
   <div class="card">
@@ -406,8 +407,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
 </div>
 
-<canvas id="receiptCanvas" style="display:none;"></canvas>
-
 <script>
 // ============================================================
 //  IndexedDB CORE
@@ -440,7 +439,7 @@ async function savePin(pin){
 }
 
 // ============================================================
-//  SECRET QUESTION — IndexedDB
+//  SECRET QUESTION
 // ============================================================
 async function saveSecretQData(q,a){
   const data=JSON.stringify({q,a:a.toLowerCase().trim()});
@@ -450,7 +449,7 @@ async function saveSecretQData(q,a){
 async function loadSecretQData(){
   const raw=await idbGet('secret_q')||localStorage.getItem('hk_secret_v9')||localStorage.getItem('hk_secret_v1');
   if(!raw)return null;
-  try{const parsed=JSON.parse(raw);return parsed;}catch(e){return null;}
+  try{return JSON.parse(raw);}catch(e){return null;}
 }
 
 async function saveSecretQuestion(){
@@ -699,7 +698,8 @@ function loadReport(){
   if(!name){toast('⚠️ Dukandar chunein');return;}
   const entries=getActive(name),total=entries.reduce((s,e)=>s+e.price,0),lp=getLastPay(name);
   const rc=document.getElementById('rep-card'),ps=document.getElementById('pay-sec'),rw=document.getElementById('rec-wrap');
-  rw.style.display='none';rc.style.display='block';
+  // FIX 1: Do NOT hide rec-wrap here — keep receipt visible after payment
+  rc.style.display='block';
   if(!entries.length){
     rc.innerHTML=`<div class="ctitle">🏪 ${xss(name)}</div>${lp?`<div style="font-size:.7rem;color:var(--g5);font-weight:600;margin-bottom:8px">📅 Aakhri: ${fmt(lp.date)} — Rs. ${amt(lp.amount)}</div>`:''}<div class="empty"><span>✅</span>Clear!</div>`;
     ps.style.display='none';return;
@@ -742,15 +742,20 @@ async function markPaid(isPartial){
   db.payments.push({dukandar:name,date:td,amount:total,method,entryIds,ts:Date.now(),isPartial});
   await saveDB(db);
   if(isPartial){partialMode=false;document.getElementById('partial-sec').style.display='none';document.getElementById('full-pay-btn').style.display='block';document.getElementById('partial-pay-btn').style.display='none';document.getElementById('partial-toggle-btn').textContent='☑️ Partial Payment';}
-  const remainingEntries=allEntries.filter(e=>!entryIds.includes(e.id)),remainingTotal=remainingEntries.reduce((s,e)=>s+e.price,0);
-  toast('🎨 Receipt...');
+  const remainingEntries=allEntries.filter(e=>!entryIds.includes(e.id));
+  const remainingTotal=remainingEntries.reduce((s,e)=>s+e.price,0);
+  toast('🎨 Receipt bana raha hai...');
+  // FIX 1: Build receipt first, THEN reload report after delay
+  // Receipt canvas stays visible; loadReport is called only AFTER receipt is ready
   setTimeout(async()=>await buildReceipt(name,entriesToPay,total,method,td,remainingTotal,isPartial),150);
 }
 
 // ============================================================
-//  RECEIPT
+//  RECEIPT — FIX 1: _lastReceiptBlob stored, loadReport delayed
 // ============================================================
-let _lastReceiptCanvas=null;
+let _lastReceiptBlob=null; // Store blob directly, not canvas reference
+let _lastReceiptName='';
+
 async function buildReceipt(dukandar,entries,total,method,payDate,remainingTotal,isPartial){
   polyfillRoundRect();
   const canvas=document.getElementById('receiptCanvas'),ctx=canvas.getContext('2d');
@@ -781,18 +786,34 @@ async function buildReceipt(dukandar,entries,total,method,payDate,remainingTotal
   drawStamp(ctx,W/2-60,HEAD+(entries.length*ROW)/2,method);
   const bg2=ctx.createLinearGradient(0,H-44,W,H);bg2.addColorStop(0,'#1b5e20');bg2.addColorStop(1,'#43a047');ctx.fillStyle=bg2;ctx.beginPath();ctx.roundRect(0,H-44,W,44,[0,0,6,6]);ctx.fill();
   ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Home Khaata v9 • گھر کا حساب • FGI',W/2,H-22);
-  _lastReceiptCanvas=canvas;
-  const rw=document.getElementById('rec-wrap');rw.style.display='block';rw.scrollIntoView({behavior:'smooth',block:'nearest'});
-  setTimeout(()=>loadReport(),400);
+
+  // FIX 1: Convert canvas to blob immediately and store it
+  // This ensures blob is available BEFORE loadReport() resets anything
+  canvas.toBlob(blob=>{
+    _lastReceiptBlob=blob;
+    _lastReceiptName='HomeKhaata_'+(dukandar||'receipt').replace(/\s+/g,'_')+'_'+today()+'.png';
+  },'image/png',1.0);
+
+  const rw=document.getElementById('rec-wrap');
+  rw.style.display='block';
+  rw.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  // FIX 1: loadReport called with longer delay, and rec-wrap stays visible
+  // loadReport() no longer hides rec-wrap (fixed above)
+  setTimeout(()=>{
+    refreshSelects();
+    // Only update report card and pay-sec, not rec-wrap
+    const name=document.getElementById('rep-dk').value;
+    if(name) loadReport();
+  },800);
+
   toast('✅ Receipt ready! Download button se save karein');
 }
 
+// FIX 1: downloadReceipt uses stored blob directly — no canvas reference needed
 function downloadReceipt(){
-  if(!_lastReceiptCanvas){toast('⚠️ Pehle payment karein!');return;}
-  _lastReceiptCanvas.toBlob(blob=>{
-    const fname='HomeKhaata_'+(document.getElementById('rep-dk').value||'receipt').replace(/\s+/g,'_')+'_'+today()+'.png';
-    openFolderPicker('📸 Receipt Kahan Save?','Receipt image save karein',blob,fname);
-  },'image/png',1.0);
+  if(!_lastReceiptBlob){toast('⚠️ Pehle payment karein!');return;}
+  openFolderPicker('📸 Receipt Kahan Save?','Receipt image save karein',_lastReceiptBlob,_lastReceiptName);
 }
 
 function drawStamp(ctx,cx,cy,method){
@@ -830,28 +851,150 @@ function buildRangeReport(){
 }
 
 // ============================================================
-//  SHARE RANGE REPORT AS IMAGE
+//  FIX 2: SHARE RANGE REPORT — Wide professional canvas image
+//  480px wide card jaisi, font readable, entries sabhi visible
 // ============================================================
 function shareRangeReport(){
-  const card=document.getElementById('range-rep-card');
-  if(!card||card.style.display==='none'){toast('⚠️ Pehle Range Report load karein!');return;}
+  const titleEl=document.getElementById('range-rep-title');
+  const bodyEl=document.getElementById('range-rep-body');
+  if(!titleEl||document.getElementById('range-rep-card').style.display==='none'){
+    toast('⚠️ Pehle Range Report load karein!');return;
+  }
   toast('📸 Image bana raha hai...');
-  setTimeout(()=>{
-    html2canvas(card,{
-      scale:2,
-      backgroundColor:'#ffffff',
-      useCORS:true,
-      logging:false
-    }).then(canvas=>{
-      canvas.toBlob(blob=>{
-        const title=document.getElementById('range-rep-title').textContent||'report';
-        const fname='RangeReport_'+title.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30)+'_'+today().replace(/-/g,'')+'.png';
-        openFolderPicker('📸 Report Image Save Karein','Customer ko share karne ke liye',blob,fname);
-      },'image/png',1.0);
-    }).catch(err=>{
-      toast('❌ Image error: '+err.message);
-    });
-  },300);
+
+  polyfillRoundRect();
+
+  // Parse data from DOM
+  const titleText=titleEl.textContent||'Report';
+
+  // Collect all erow entries
+  const erows=[...bodyEl.querySelectorAll('.erow')];
+  const entries=erows.map(row=>{
+    const dateEl=row.querySelector('.edate');
+    const descEl=row.querySelector('.edesc');
+    const amtEl=row.querySelector('.eamt');
+    const noEl=row.querySelector('.esno');
+    return{
+      no:noEl?noEl.textContent.trim():'',
+      date:dateEl?dateEl.textContent.trim():'',
+      desc:descEl?descEl.textContent.trim():'',
+      amt:amtEl?amtEl.textContent.trim():''
+    };
+  });
+
+  // Get summary values
+  const summBoxes=[...bodyEl.querySelectorAll('[style*="grid-template-columns"]>div')];
+  let kharcha='',paid='',baki='',bakiColor='#e65100';
+  if(summBoxes.length>=3){
+    kharcha=summBoxes[0].querySelector('[style*="font-size:.88rem"]')?.textContent||'';
+    paid=summBoxes[1].querySelector('[style*="font-size:.88rem"]')?.textContent||'';
+    const bEl=summBoxes[2].querySelector('[style*="font-size:.88rem"]');
+    baki=bEl?bEl.textContent:'';
+    bakiColor=bEl?bEl.style.color||'#e65100':'#e65100';
+  }
+
+  // Get carry/baki box
+  const carryBox=bodyEl.querySelector('.carry-box');
+  const carryLbl=carryBox?.querySelector('.carry-lbl')?.textContent||'';
+  const carryAmt=carryBox?.querySelector('.carry-amt')?.textContent||'';
+  const isClear=carryBox?.classList.contains('green-box');
+
+  // Canvas dimensions — fixed wide width
+  const W=600;
+  const HEADER_H=80;
+  const SUMMARY_H=80;
+  const ENTRIES_PER_ROW=44;
+  const CARRY_H=60;
+  const FOOTER_H=40;
+  const PADDING=20;
+  const TABLE_H=entries.length*ENTRIES_PER_ROW + 36; // +36 for column header
+  const H=HEADER_H+SUMMARY_H+TABLE_H+CARRY_H+FOOTER_H+PADDING*2;
+
+  const offCanvas=document.createElement('canvas');
+  offCanvas.width=W;offCanvas.height=H;
+  const c=offCanvas.getContext('2d');
+
+  // Background
+  c.fillStyle='#f4faf4';c.fillRect(0,0,W,H);
+
+  // ── Header gradient ──
+  const hg=c.createLinearGradient(0,0,W,0);hg.addColorStop(0,'#1b5e20');hg.addColorStop(1,'#43a047');
+  c.fillStyle=hg;c.fillRect(0,0,W,HEADER_H);
+  c.fillStyle='#fff';c.font='bold 18px Poppins,Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';
+  c.fillText('🌿  Home Khaata',PADDING,HEADER_H*0.35);
+  c.font='12px Poppins,Arial,sans-serif';c.globalAlpha=.85;
+  c.fillText('📅  '+titleText,PADDING,HEADER_H*0.72);c.globalAlpha=1;
+
+  // Date on right
+  const now=new Date();c.fillStyle='rgba(255,255,255,0.7)';c.font='10px Poppins,Arial,sans-serif';c.textAlign='right';
+  c.fillText(String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear(),W-PADDING,HEADER_H/2);
+
+  // ── Summary boxes ──
+  const sy=HEADER_H+10;const bw=(W-PADDING*2-16)/3;
+  // Kharcha
+  c.fillStyle='#fff3e0';c.strokeStyle='#ffb74d';c.lineWidth=1.5;c.beginPath();c.roundRect(PADDING,sy,bw,58,8);c.fill();c.stroke();
+  c.fillStyle='#888';c.font='10px Poppins,Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('Expenses',PADDING+bw/2,sy+18);
+  c.fillStyle='#e65100';c.font='bold 14px Poppins,Arial,sans-serif';c.fillText(kharcha,PADDING+bw/2,sy+40);
+  // Paid
+  c.fillStyle='#e8f5e9';c.strokeStyle='#a5d6a7';c.beginPath();c.roundRect(PADDING+bw+8,sy,bw,58,8);c.fill();c.stroke();
+  c.fillStyle='#888';c.font='10px Poppins,Arial,sans-serif';c.fillText('Paid',PADDING+bw+8+bw/2,sy+18);
+  c.fillStyle='#2e7d32';c.font='bold 14px Poppins,Arial,sans-serif';c.fillText(paid,PADDING+bw+8+bw/2,sy+40);
+  // Baki
+  const bx=PADDING+bw*2+16;
+  c.fillStyle=bakiColor==='#e65100'||bakiColor.includes('e65100')?'#fff3e0':'#e8f5e9';
+  c.strokeStyle=bakiColor==='#e65100'||bakiColor.includes('e65100')?'#ffb74d':'#a5d6a7';
+  c.beginPath();c.roundRect(bx,sy,bw,58,8);c.fill();c.stroke();
+  c.fillStyle='#888';c.font='10px Poppins,Arial,sans-serif';c.fillText('Baki',bx+bw/2,sy+18);
+  c.fillStyle=bakiColor;c.font='bold 14px Poppins,Arial,sans-serif';c.fillText(baki,bx+bw/2,sy+40);
+
+  // ── Table header ──
+  const ty=HEADER_H+SUMMARY_H+PADDING;
+  c.fillStyle='#1b5e20';c.beginPath();c.roundRect(PADDING,ty,W-PADDING*2,32,[6,6,0,0]);c.fill();
+  c.fillStyle='#fff';c.font='bold 10px Poppins,Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';
+  c.fillText('#',PADDING+8,ty+16);c.fillText('Tarikh',PADDING+30,ty+16);c.fillText('Cheez / Description',PADDING+110,ty+16);
+  c.textAlign='right';c.fillText('Raqam (Rs.)',W-PADDING-8,ty+16);
+
+  // ── Table rows ──
+  entries.forEach((e,i)=>{
+    const ry=ty+32+i*ENTRIES_PER_ROW;
+    c.fillStyle=i%2===0?'#fff':'#f0faf0';c.fillRect(PADDING,ry,W-PADDING*2,ENTRIES_PER_ROW);
+    c.strokeStyle='#e0ede0';c.lineWidth=0.5;c.beginPath();c.moveTo(PADDING,ry+ENTRIES_PER_ROW);c.lineTo(W-PADDING,ry+ENTRIES_PER_ROW);c.stroke();
+    const mid=ry+ENTRIES_PER_ROW/2;
+    c.fillStyle='#90a4ae';c.font='10px Poppins,Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';
+    c.fillText(e.no,PADDING+8,mid);
+    c.fillStyle='#6b8f6b';c.font='10px Poppins,Arial,sans-serif';c.fillText(e.date,PADDING+30,mid);
+    c.fillStyle='#1a2e1a';c.font='11px Poppins,Arial,sans-serif';
+    const dText=e.desc.length>38?e.desc.slice(0,38)+'…':e.desc;
+    c.fillText(dText,PADDING+110,mid);
+    c.fillStyle='#2e7d32';c.font='bold 11px Poppins,Arial,sans-serif';c.textAlign='right';
+    c.fillText(e.amt,W-PADDING-8,mid);
+  });
+
+  // Border around table
+  c.strokeStyle='#c8e6c9';c.lineWidth=1.5;c.strokeRect(PADDING,ty,W-PADDING*2,32+entries.length*ENTRIES_PER_ROW);
+
+  // ── Carry / Baki box ──
+  const cby=ty+32+entries.length*ENTRIES_PER_ROW+12;
+  c.fillStyle=isClear?'#e8f5e9':'#fff3e0';
+  c.strokeStyle=isClear?'#66bb6a':'#ffb74d';
+  c.lineWidth=2;c.beginPath();c.roundRect(PADDING,cby,W-PADDING*2,48,10);c.fill();c.stroke();
+  c.fillStyle=isClear?'#2e7d32':'#e65100';c.font='bold 14px Poppins,Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';
+  c.fillText(carryLbl,PADDING+16,cby+24);
+  c.font='bold 16px Poppins,Arial,sans-serif';c.textAlign='right';c.fillText(carryAmt,W-PADDING-16,cby+24);
+
+  // ── Footer ──
+  const fgy=H-FOOTER_H;
+  const fg=c.createLinearGradient(0,fgy,W,H);fg.addColorStop(0,'#1b5e20');fg.addColorStop(1,'#43a047');
+  c.fillStyle=fg;c.beginPath();c.roundRect(0,fgy,W,FOOTER_H,[0,0,6,6]);c.fill();
+  c.fillStyle='rgba(255,255,255,.9)';c.font='bold 9px Poppins,Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';
+  c.fillText('Home Khaata v9 • گھر کا حساب • Powered by FGI — Ali Pur Chattha',W/2,fgy+FOOTER_H/2);
+
+  // Convert to blob and open folder picker
+  offCanvas.toBlob(blob=>{
+    const title=titleText.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
+    const fname='RangeReport_'+title+'_'+today().replace(/-/g,'')+'.png';
+    openFolderPicker('📸 Report Image Save Karein','Customer ko share karne ke liye',blob,fname);
+  },'image/png',1.0);
 }
 
 function openEdit(id){
