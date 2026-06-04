@@ -1,4 +1,4 @@
-const CACHE = 'home-khaata-v10';
+const CACHE = 'home-khaata-v10-fix1';
 const ASSETS = [
   './',
   './index.html',
