@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Home Khaata v9 - گھر کا حساب</title>
+<title>Home Khaata v10 - گھر کا حساب</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1b5e20">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -202,7 +202,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <button class="lock-top-btn" onclick="lockApp()">🔒</button>
   </div>
 </div>
-<div id="idb-bar">🛡️ v9 — IndexedDB + PIN Lock + 100% Offline</div>
+<div id="idb-bar">🛡️ v10 — IndexedDB + PIN Lock + 100% Offline</div>
 
 <div class="tabs">
   <button class="tb active" onclick="showTab('add',this)"><span>➕</span>Entry</button>
@@ -785,27 +785,25 @@ async function buildReceipt(dukandar,entries,total,method,payDate,remainingTotal
   if(isPartial&&remainingTotal>0){const ry=ty+58;ctx.fillStyle='#fff3e0';ctx.strokeStyle='#ffb74d';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(20,ry,W-40,48,10);ctx.fill();ctx.stroke();ctx.fillStyle='#e65100';ctx.font='bold 13px Poppins,Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('🕐  Baki',36,ry+24);ctx.font='bold 17px Poppins,Arial,sans-serif';ctx.textAlign='right';ctx.fillText('Rs. '+amt(remainingTotal),W-28,ry+24);}
   drawStamp(ctx,W/2-60,HEAD+(entries.length*ROW)/2,method);
   const bg2=ctx.createLinearGradient(0,H-44,W,H);bg2.addColorStop(0,'#1b5e20');bg2.addColorStop(1,'#43a047');ctx.fillStyle=bg2;ctx.beginPath();ctx.roundRect(0,H-44,W,44,[0,0,6,6]);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Home Khaata v9 • گھر کا حساب • FGI',W/2,H-22);
+  ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 10px Poppins,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Home Khaata v10 • گھر کا حساب • FGI',W/2,H-22);
 
-  // FIX 1: Convert canvas to blob immediately and store it
-  // This ensures blob is available BEFORE loadReport() resets anything
+  // FIXED: toBlob is async — loadReport MUST be called INSIDE the callback
+  // otherwise blob is null when Download button is pressed
   canvas.toBlob(blob=>{
-    _lastReceiptBlob=blob;
-    _lastReceiptName='HomeKhaata_'+(dukandar||'receipt').replace(/\s+/g,'_')+'_'+today()+'.png';
-  },'image/png',1.0);
-
-  const rw=document.getElementById('rec-wrap');
-  rw.style.display='block';
-  rw.scrollIntoView({behavior:'smooth',block:'nearest'});
-
-  // FIX 1: loadReport called with longer delay, and rec-wrap stays visible
-  // loadReport() no longer hides rec-wrap (fixed above)
-  setTimeout(()=>{
+    if(blob){
+      _lastReceiptBlob=blob;
+      _lastReceiptName='HomeKhaata_'+(dukandar||'receipt').replace(/\s+/g,'_')+'_'+today()+'.png';
+    }
+    // Show receipt card
+    const rw=document.getElementById('rec-wrap');
+    rw.style.display='block';
+    rw.scrollIntoView({behavior:'smooth',block:'nearest'});
+    toast('✅ Receipt ready! Download karein');
+    // Only NOW refresh selects/report — blob is already safely stored
     refreshSelects();
-    // Only update report card and pay-sec, not rec-wrap
-    const name=document.getElementById('rep-dk').value;
-    if(name) loadReport();
-  },800);
+    const currentName=document.getElementById('rep-dk').value;
+    if(currentName) loadReport();
+  },'image/png',1.0);
 
   toast('✅ Receipt ready! Download button se save karein');
 }
@@ -1025,9 +1023,9 @@ async function deleteEntry(id,from,modalName){
 //  EXPORT / IMPORT
 // ============================================================
 function exportData(){
-  const d={...db,exportedAt:new Date().toISOString(),version:'v9'};
+  const d={...db,exportedAt:new Date().toISOString(),version:'v10'};
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
-  const fname='HomeKhaata_v9_'+today().replace(/-/g,'')+'.json';
+  const fname='HomeKhaata_v10_'+today().replace(/-/g,'')+'.json';
   openFolderPicker('💾 Backup Kahan Save?','JSON backup file',blob,fname);
 }
 
